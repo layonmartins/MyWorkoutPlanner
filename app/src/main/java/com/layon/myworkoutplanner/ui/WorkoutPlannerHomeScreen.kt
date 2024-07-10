@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -48,7 +49,7 @@ fun WorkoutPlannerHomeScreen(
                 WorkoutGroupItem(exercisesGroup) {
                     Log.d(TAG, "WorkoutPlannerHomeScreen - WorkoutGroupItem clicked id: $it")
                 }
-                Divider()
+                HorizontalDivider()
             }
         }
     }
@@ -67,9 +68,12 @@ fun WorkoutGroupItem(
     exerciseGroupName: Pair<Int, String>,
     onItemClick: (Int) -> Unit = { }) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clickable {
-            onItemClick(exerciseGroupName.first)
-        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clickable {
+                onItemClick(exerciseGroupName.first)
+            },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
