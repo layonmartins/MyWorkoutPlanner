@@ -80,12 +80,13 @@ fun WorkoutPlannerDetailScreen(
         ) {
             items(exercises) { exercise ->
                 WorkoutItem(
-                    exerciseName = exercise,
+                    name = exercise,
                     onItemClick = {
                         Log.d(TAG, "WorkoutPlannerDetailScreen - exerciseName clicked id: $it")
                     },
                     onEditItemClick = {},
-                    onDeletedItemClick = {})
+                    onDeletedItemClick = {}
+                )
                 HorizontalDivider()
             }
         }
@@ -131,7 +132,8 @@ fun WorkoutPlannerDetailScreenPreview() {
 
 @Composable
 fun WorkoutItem(
-    exerciseName: Pair<Int, String>,
+    name: Pair<Int, String>,
+    isBold: Boolean = false,
     onItemClick: (Int) -> Unit = { },
     onEditItemClick: (Int) -> Unit = { },
     onDeletedItemClick: (Int) -> Unit = { }
@@ -141,38 +143,27 @@ fun WorkoutItem(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .clickable {
-                onItemClick(exerciseName.first)
+                onItemClick(name.first)
             },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             modifier = Modifier.fillMaxWidth(0.8f),
-            text = exerciseName.second,
+            text = name.second,
             fontSize = 18.sp,
             maxLines = 2,
+            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
             overflow = TextOverflow.Ellipsis
         )
         Row(
             horizontalArrangement = Arrangement.End
         ) {
             EditIconButton(
-                onClick = {
-                    onEditItemClick(exerciseName.first)
-                    Log.d(
-                        TAG,
-                        "WorkoutPlannerDetailScreen - Edit button clicked id: ${exerciseName.first}"
-                    )
-                }
+                onClick = { onEditItemClick(name.first) }
             )
             DeleteIconButton(
-                onClick = {
-                    onDeletedItemClick(exerciseName.first)
-                    Log.d(
-                        TAG,
-                        "WorkoutPlannerDetailScreen - Delete button clicked id: ${exerciseName.first}"
-                    )
-                }
+                onClick = { onDeletedItemClick(name.first) }
             )
         }
     }

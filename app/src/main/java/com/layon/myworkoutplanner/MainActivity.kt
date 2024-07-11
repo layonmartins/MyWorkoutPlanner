@@ -23,9 +23,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyWorkoutPlannerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    WorkoutPlannerDetailScreen(
-                        exercises,
-                        note,
+                    WorkoutPlannerHomeScreen(
+                        exercisesGroup,
+                        //note,
                         innerPadding
                     )
                 }
