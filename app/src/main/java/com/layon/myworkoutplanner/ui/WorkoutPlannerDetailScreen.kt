@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -69,12 +70,20 @@ fun WorkoutPlannerDetailScreen(
     padding: PaddingValues
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = padding.calculateTopPadding() + 8.dp),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Text(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            text = "Workout Planner Name",
+            fontSize = 22.sp,
+            maxLines = 2,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Bold,
+            overflow = TextOverflow.Ellipsis
+        )
+        HorizontalDivider()
         LazyColumn(
             modifier = Modifier.fillMaxHeight(0.7f),
         ) {
@@ -96,7 +105,7 @@ fun WorkoutPlannerDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxHeight(1f)
-                .padding(start = 8.dp, end = 8.dp, bottom = 8.dp + padding.calculateBottomPadding())
+                .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
                 .border(
                     width = 2.dp,
                     color = md_theme_light_secondary,

@@ -53,12 +53,11 @@ val exercisesGroup  = listOf(
 @Composable
 fun WorkoutPlannerHomeScreen(
     exercisesGroup: List<Pair<Int,String>>,
-    padding: PaddingValues
+    padding: PaddingValues,
+    onItemClick: (Int) -> Unit = { }
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = padding.calculateTopPadding() + 8.dp),
+        modifier = Modifier.fillMaxSize()
     ){
         Column(
             verticalArrangement = Arrangement.Top,
@@ -71,6 +70,7 @@ fun WorkoutPlannerHomeScreen(
                         isBold = true,
                         onItemClick = {
                             Log.d(TAG, "WorkoutPlannerHomeScreen - exerciseName clicked id: $it")
+                            onItemClick(it)
                         },
                         onEditItemClick = {
                             Log.d(TAG, "WorkoutPlannerHomeScreen - Edit button clicked id: $it")
@@ -84,7 +84,7 @@ fun WorkoutPlannerHomeScreen(
             }
         }
         AddButton(
-            modifier = Modifier.align(Alignment.BottomEnd).padding(vertical = padding.calculateTopPadding(), horizontal = 8.dp),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(vertical = 8.dp, horizontal = 8.dp),
             onClick = {
             Log.d(TAG, "WorkoutPlannerHomeScreen - Add button clicked")
         })
