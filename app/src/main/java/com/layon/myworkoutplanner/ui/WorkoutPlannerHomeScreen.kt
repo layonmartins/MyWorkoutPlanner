@@ -79,7 +79,7 @@ fun WorkoutPlannerHomeScreen(
     if (shouldShowEditScreen.value) {
         CustomDialog(
             value = workoutName.value,
-            dialogTitle = "Edit Workout name",
+            dialogTitle = "Edit Workout Name",
             setShowDialog = { shouldShowEditScreen.value = it },
             setValue = {
                 Log.d(TAG, "WorkoutPlannerHomeScreen - Edit confirmation clicked: $it")
@@ -92,7 +92,7 @@ fun WorkoutPlannerHomeScreen(
     val shouldShowAddScreen = rememberSaveable { mutableStateOf(false) }
     if (shouldShowAddScreen.value) {
         CustomDialog(
-            value = workoutName.value,
+            value = "",
             dialogTitle = "Add New Workout",
             setShowDialog = { shouldShowAddScreen.value = it },
             setValue = {
@@ -102,8 +102,6 @@ fun WorkoutPlannerHomeScreen(
             }
         )
     }
-
-    //TODO open customDailog to add new workout name
 
     Box(
         modifier = Modifier.fillMaxSize()

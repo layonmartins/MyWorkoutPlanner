@@ -23,6 +23,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +33,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.layon.myworkoutplanner.ui.components.CustomDialog
+import com.layon.myworkoutplanner.ui.components.DeleteDialog
 import com.layon.myworkoutplanner.ui.components.DeleteIconButton
 import com.layon.myworkoutplanner.ui.components.EditIconButton
 import com.layon.myworkoutplanner.ui.theme.MyWorkoutPlannerTheme
@@ -71,6 +75,50 @@ fun WorkoutPlannerDetailScreen(
     note: String,
     padding: PaddingValues
 ) {
+
+    val shouldShowDeleteDialog = rememberSaveable { mutableStateOf(false) }
+    val workoutDetailName = rememberSaveable { mutableStateOf("") }
+    if (shouldShowDeleteDialog.value) {
+        DeleteDialog(
+            workoutName = workoutDetailName,
+            onDismissRequest = {
+                shouldShowDeleteDialog.value = false
+            },
+            onConfirmation = {
+                Log.d(TAG, "WorkoutPlannerDetailScreen - Delete confirmation clicked")
+                //viewModel.delete(viewModel.getSelectedWorkoutPlanner())
+                //close DeleteDialog
+            })
+    }
+
+    val shouldShowEditScreen = rememberSaveable { mutableStateOf(false) }
+    if (shouldShowEditScreen.value) {
+        CustomDialog(
+            value = workoutDetailName.value,
+            dialogTitle = "Edit Workout Name",
+            setShowDialog = { shouldShowEditScreen.value = it },
+            setValue = {
+                Log.d(TAG, "WorkoutPlannerDetailScreen - Edit confirmation clicked: $it")
+                //viewModel.save(viewModel.getSelectedWorkoutPlanner())
+                //close CustomDialog
+            }
+        )
+    }
+
+    val shouldShowAddScreen = rememberSaveable { mutableStateOf(false) }
+    if (shouldShowAddScreen.value) {
+        CustomDialog(
+            value = "",
+            dialogTitle = "Add New Workout",
+            setShowDialog = { shouldShowAddScreen.value = it },
+            setValue = {
+                Log.d(TAG, "WorkoutPlannerDetailScreen - Save confirmation clicked: $it")
+                //viewModel.save(viewModel.getSelectedWorkoutPlanner())
+                //close CustomDialog
+            }
+        )
+    }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
@@ -96,8 +144,18 @@ fun WorkoutPlannerDetailScreen(
                         onItemClick = {
                             Log.d(TAG, "WorkoutPlannerDetailScreen - exerciseName clicked id: $it")
                         },
-                        onEditItemClick = {},
-                        onDeletedItemClick = {}
+                        onEditItemClick = {
+                            Log.d(TAG, "WorkoutPlannerDetailScreen - Edit button clicked id: $it")
+                            //viewModel.setSelectedWorkoutDetailName(it)
+                            workoutDetailName.value = exercise.second
+                            shouldShowEditScreen.value = true
+                        },
+                        onDeletedItemClick = {
+                            Log.d(TAG, "WorkoutPlannerDetailScreen - Delete button clicked id: $it")
+                            //viewModel.setSelectedWorkoutDetailName(it)
+                            workoutDetailName.value = exercise.second
+                            shouldShowDeleteDialog.value = true
+                        }
                     )
                     HorizontalDivider()
                 }
@@ -112,6 +170,7 @@ fun WorkoutPlannerDetailScreen(
                     .padding(vertical = 8.dp, horizontal = 8.dp),
                 onClick = {
                     Log.d(TAG, "WorkoutPlannerDetailScreen - Add button clicked")
+                    shouldShowAddScreen.value = true
                 })
         }
         Spacer(modifier = Modifier.height(8.dp))

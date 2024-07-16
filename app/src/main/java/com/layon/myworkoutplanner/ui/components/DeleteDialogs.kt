@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun DeleteDialog(
@@ -46,7 +47,7 @@ fun AlertDialogExample(
             Icon(icon, contentDescription = "Example Icon")
         },
         title = {
-            Text(text = dialogTitle)
+            Text(text = dialogTitle, textAlign = TextAlign.Center)
         },
         text = {
             Text(text = dialogText)
