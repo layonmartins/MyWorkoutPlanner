@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -84,20 +86,33 @@ fun WorkoutPlannerDetailScreen(
             overflow = TextOverflow.Ellipsis
         )
         HorizontalDivider()
-        LazyColumn(
-            modifier = Modifier.fillMaxHeight(0.7f),
+        Box(
+            modifier = Modifier.fillMaxHeight(0.7f)
         ) {
-            items(exercises) { exercise ->
-                WorkoutItem(
-                    name = exercise,
-                    onItemClick = {
-                        Log.d(TAG, "WorkoutPlannerDetailScreen - exerciseName clicked id: $it")
-                    },
-                    onEditItemClick = {},
-                    onDeletedItemClick = {}
-                )
-                HorizontalDivider()
+            LazyColumn {
+                items(exercises) { exercise ->
+                    WorkoutItem(
+                        name = exercise,
+                        onItemClick = {
+                            Log.d(TAG, "WorkoutPlannerDetailScreen - exerciseName clicked id: $it")
+                        },
+                        onEditItemClick = {},
+                        onDeletedItemClick = {}
+                    )
+                    HorizontalDivider()
+                }
+                // Add a spacer item at the end of lazy column
+                item {
+                    Spacer(modifier = Modifier.height(72.dp))
+                }
             }
+            AddButton(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(vertical = 8.dp, horizontal = 8.dp),
+                onClick = {
+                    Log.d(TAG, "WorkoutPlannerDetailScreen - Add button clicked")
+                })
         }
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
@@ -158,7 +173,7 @@ fun WorkoutItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            modifier = Modifier.fillMaxWidth(0.8f),
+            modifier = Modifier.fillMaxWidth(0.7f),
             text = name.second,
             fontSize = 18.sp,
             maxLines = 2,
@@ -171,6 +186,7 @@ fun WorkoutItem(
             EditIconButton(
                 onClick = { onEditItemClick(name.first) }
             )
+            Spacer(modifier = Modifier.width(8.dp))
             DeleteIconButton(
                 onClick = { onDeletedItemClick(name.first) }
             )
