@@ -90,7 +90,6 @@ fun MyWorkoutPlannerApp(
             composable(route = MyWorkoutPlannerScreen.Home.name) {
                 WorkoutPlannerHomeScreen(
                     exercisesGroup = exercisesGroup,
-                    padding = innerPadding,
                     onItemClick = {
                         //TODO pass id parameter or call here viewModel.getDetail(id) ??
                         navController.navigate(MyWorkoutPlannerScreen.WorkoutDetail.name)
