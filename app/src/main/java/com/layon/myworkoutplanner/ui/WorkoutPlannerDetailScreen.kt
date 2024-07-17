@@ -22,12 +22,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,8 +46,10 @@ import com.layon.myworkoutplanner.ui.components.CustomDialog
 import com.layon.myworkoutplanner.ui.components.DeleteDialog
 import com.layon.myworkoutplanner.ui.components.DeleteIconButton
 import com.layon.myworkoutplanner.ui.components.EditIconButton
+import com.layon.myworkoutplanner.ui.components.SaveIconButton
 import com.layon.myworkoutplanner.ui.theme.MyWorkoutPlannerTheme
 import com.layon.myworkoutplanner.ui.theme.md_theme_light_secondary
+import kotlinx.coroutines.delay
 
 val exercises = listOf(
     Pair(0, "Barbell Incline Bench Press"),
@@ -125,7 +136,9 @@ fun WorkoutPlannerDetailScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             text = "Workout Planner Name",
             fontSize = 22.sp,
             maxLines = 2,
@@ -135,7 +148,7 @@ fun WorkoutPlannerDetailScreen(
         )
         HorizontalDivider()
         Box(
-            modifier = Modifier.fillMaxHeight(0.7f)
+            modifier = Modifier.fillMaxHeight(0.6f)
         ) {
             LazyColumn {
                 items(exercises) { exercise ->
@@ -176,32 +189,7 @@ fun WorkoutPlannerDetailScreen(
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
-        Column(
-            modifier = Modifier
-                .fillMaxHeight(1f)
-                .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
-                .border(
-                    width = 2.dp,
-                    color = md_theme_light_secondary,
-                    shape = RoundedCornerShape(5.dp)
-                )
-        ) {
-            Text(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                text = "Note: ",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
-            Text(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 8.dp),
-                text = note
-            )
-        }
+        NoteItem(note)
     }
 }
 
@@ -258,5 +246,94 @@ fun WorkoutItem(
 fun WorkoutItemPreview() {
     MyWorkoutPlannerTheme {
         WorkoutItem(exercises[0])
+    }
+}
+
+@Composable
+fun NoteItem(
+    noteString: String,
+    onEditItemClick: () -> Unit = { },
+    onSaveItemClick: (String) -> Unit = { }
+) {
+    val isNoteInEditionMode = rememberSaveable { mutableStateOf(false) }
+    var textFieldValueState by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = noteString, selection = when {
+                    noteString.isEmpty() -> TextRange.Zero
+                    else -> TextRange(noteString.length, noteString.length)
+                }
+            )
+        )
+    }
+    val focusRequester = remember { FocusRequester() }
+
+    Column(
+        modifier = Modifier
+            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+            .border(
+                width = 2.dp,
+                color = md_theme_light_secondary,
+                shape = RoundedCornerShape(5.dp)
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                modifier = Modifier.padding(vertical = 16.dp),
+                text = "Note: ",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+            if (isNoteInEditionMode.value) {
+                SaveIconButton(
+                    onClick = {
+                        Log.d(TAG, "NoteItem - Save confirmation clicked : ${textFieldValueState.text}")
+                        isNoteInEditionMode.value = false
+                    }
+                )
+            } else {
+                EditIconButton(
+                    onClick = { isNoteInEditionMode.value = true }
+                )
+            }
+        }
+        if (isNoteInEditionMode.value) {
+            TextField(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 8.dp)
+                    .focusRequester(focusRequester),
+                value = textFieldValueState,
+                onValueChange = { textFieldValueState = it },
+            )
+            // Launch an effect to request focus after a short delay
+            LaunchedEffect(Unit) {
+                delay(100)
+                focusRequester.requestFocus()
+            }
+        } else {
+            Text(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 8.dp),
+                text = textFieldValueState.text
+            )
+        }
+
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun NoteItemPreview() {
+    MyWorkoutPlannerTheme {
+        NoteItem(note)
     }
 }
