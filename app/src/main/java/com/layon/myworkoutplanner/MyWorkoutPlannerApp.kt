@@ -25,9 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import com.layon.myworkoutplanner.ui.MyWorkoutPlannerViewModel
 import com.layon.myworkoutplanner.ui.WorkoutPlannerDetailScreen
 import com.layon.myworkoutplanner.ui.WorkoutPlannerHomeScreen
-import com.layon.myworkoutplanner.ui.exercises
-import com.layon.myworkoutplanner.ui.exercisesGroup
-import com.layon.myworkoutplanner.ui.note
 
 enum class MyWorkoutPlannerScreen(val title: String) {
     Home(title = "My Workout Planner"),
@@ -66,7 +63,7 @@ fun MyWorkoutPlannerScreenAppBar(
 
 @Composable
 fun MyWorkoutPlannerApp(
-    viewModel: MyWorkoutPlannerViewModel = viewModel(),
+    myWorkoutPlannerViewModel: MyWorkoutPlannerViewModel = viewModel(),
     navController: NavHostController = rememberNavController()
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -89,18 +86,15 @@ fun MyWorkoutPlannerApp(
         ) {
             composable(route = MyWorkoutPlannerScreen.Home.name) {
                 WorkoutPlannerHomeScreen(
-                    exercisesGroup = exercisesGroup,
+                    viewModel = myWorkoutPlannerViewModel,
                     onItemClick = {
-                        //TODO pass id parameter or call here viewModel.getDetail(id) ??
                         navController.navigate(MyWorkoutPlannerScreen.WorkoutDetail.name)
                     }
                 )
             }
             composable(route = MyWorkoutPlannerScreen.WorkoutDetail.name) {
                 WorkoutPlannerDetailScreen(
-                    exercises = exercises,
-                    note = note,
-                    padding = innerPadding
+                    viewModel = myWorkoutPlannerViewModel
                 )
             }
         }

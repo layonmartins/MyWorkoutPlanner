@@ -16,12 +16,16 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.layon.myworkoutplanner.db.model.Workout
 import com.layon.myworkoutplanner.ui.components.CustomDialog
 import com.layon.myworkoutplanner.ui.components.DeleteDialog
 import com.layon.myworkoutplanner.ui.theme.MyWorkoutPlannerTheme
@@ -57,34 +61,34 @@ val exercisesGroup  = listOf(
 
 @Composable
 fun WorkoutPlannerHomeScreen(
-    exercisesGroup: List<Pair<Int,String>>,
-    onItemClick: (Int) -> Unit = { }
+    viewModel: MyWorkoutPlannerViewModel,
+    onItemClick: () -> Unit = { }
 ) {
     val shouldShowDeleteDialog = rememberSaveable { mutableStateOf(false) }
-    val workoutName = rememberSaveable { mutableStateOf("") }
+
     if (shouldShowDeleteDialog.value) {
         DeleteDialog(
-            workoutName = workoutName,
+            workoutName = viewModel.workoutSelected.name,
             onDismissRequest = {
                 shouldShowDeleteDialog.value = false
             },
             onConfirmation = {
                 Log.d(TAG, "WorkoutPlannerHomeScreen - Delete confirmation clicked")
-                //viewModel.delete(viewModel.getSelectedWorkoutPlanner())
-                //close DeleteDialog
+                viewModel.deleteWorkout()
+                shouldShowDeleteDialog.value = false
             })
     }
 
     val shouldShowEditScreen = rememberSaveable { mutableStateOf(false) }
     if (shouldShowEditScreen.value) {
         CustomDialog(
-            value = workoutName.value,
+            value = viewModel.workoutSelected.name,
             dialogTitle = "Edit Workout Name",
             setShowDialog = { shouldShowEditScreen.value = it },
             setValue = {
                 Log.d(TAG, "WorkoutPlannerHomeScreen - Edit confirmation clicked: $it")
-                //viewModel.save(viewModel.getSelectedWorkoutPlanner())
-                //close CustomDialog
+                viewModel.workoutSelected = viewModel.workoutSelected.copy(name = it)
+                viewModel.updateWorkout()
             }
         )
     }
@@ -97,11 +101,15 @@ fun WorkoutPlannerHomeScreen(
             setShowDialog = { shouldShowAddScreen.value = it },
             setValue = {
                 Log.d(TAG, "WorkoutPlannerHomeScreen - Save confirmation clicked: $it")
-                //viewModel.save(viewModel.getSelectedWorkoutPlanner())
-                //close CustomDialog
+                val newWorkout = Workout(name = it, note = "")
+                viewModel.insertWorkout(newWorkout)
             }
         )
     }
+
+    LaunchedEffect(key1 = true, block = {
+        viewModel.getWorkoutList()
+    })
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -110,25 +118,25 @@ fun WorkoutPlannerHomeScreen(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val workoutList by viewModel.workoutList.collectAsStateWithLifecycle()
             LazyColumn {
-                items(exercisesGroup) { exerciseGroup ->
+                items(workoutList) { workout ->
                     WorkoutItem(
-                        name = exerciseGroup,
+                        workout = workout.id to workout.name,
                         isBold = true,
                         onItemClick = {
-                            Log.d(TAG, "WorkoutPlannerHomeScreen - exerciseName clicked id: $it")
-                            onItemClick(it)
+                            Log.d(TAG, "WorkoutPlannerHomeScreen - exerciseName clicked id: ${workout.id}")
+                            viewModel.workoutSelected = workout
+                            onItemClick()
                         },
                         onEditItemClick = {
-                            Log.d(TAG, "WorkoutPlannerHomeScreen - Edit button clicked id: $it")
-                            //viewModel.setSelectedWorkoutPlanner(it)
-                            workoutName.value = exerciseGroup.second
+                            Log.d(TAG, "WorkoutPlannerHomeScreen - Edit button clicked id: ${workout.id}")
+                            viewModel.workoutSelected = workout
                             shouldShowEditScreen.value = true
                         },
                         onDeletedItemClick = {
-                            Log.d(TAG, "WorkoutPlannerHomeScreen - Delete button clicked id: $it")
-                            //viewModel.setSelectedWorkoutPlanner(it)
-                            workoutName.value = exerciseGroup.second
+                            Log.d(TAG, "WorkoutPlannerHomeScreen - Delete button clicked id: ${workout.id}")
+                            viewModel.workoutSelected = workout
                             shouldShowDeleteDialog.value = true
                         }
                     )
@@ -155,7 +163,7 @@ fun WorkoutPlannerHomeScreen(
 @Composable
 fun WorkoutPlannerHomeScreenPreview() {
     MyWorkoutPlannerTheme {
-        WorkoutPlannerHomeScreen(exercisesGroup)
+        //WorkoutPlannerHomeScreen(exercisesGroup)
     }
 }
 

@@ -8,4 +8,5 @@ interface WorkoutDetailRepository {
     suspend fun delete(workoutDetail: WorkoutDetail)
     suspend fun update(workoutDetail: WorkoutDetail)
     suspend fun getAll(workoutId: Int) : Flow<List<WorkoutDetail>>
+    suspend fun deleteAll(workoutId: Int)
 }

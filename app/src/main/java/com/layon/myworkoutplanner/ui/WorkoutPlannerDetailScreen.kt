@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -42,6 +41,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.layon.myworkoutplanner.db.model.WorkoutDetail
 import com.layon.myworkoutplanner.ui.components.CustomDialog
 import com.layon.myworkoutplanner.ui.components.DeleteDialog
 import com.layon.myworkoutplanner.ui.components.DeleteIconButton
@@ -70,48 +72,37 @@ val exercises = listOf(
     Pair(15, "GG"),
 )
 
-val exercises2 = listOf(
-    Pair(0, "Barbell Incline Bench Press"),
-    Pair(1, "Dumbbell Bench Press (Flat Bench) Flat"),
-    Pair(2, "Chest Fly"),
-)
-
 val note =
     "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-//val note = "Lorem Ipsum is simply dummy text of the printing and typesetting industry."
 
 @Composable
 fun WorkoutPlannerDetailScreen(
-    exercises: List<Pair<Int, String>>,
-    note: String,
-    padding: PaddingValues
+    viewModel: MyWorkoutPlannerViewModel
 ) {
-
     val shouldShowDeleteDialog = rememberSaveable { mutableStateOf(false) }
-    val workoutDetailName = rememberSaveable { mutableStateOf("") }
     if (shouldShowDeleteDialog.value) {
         DeleteDialog(
-            workoutName = workoutDetailName,
+            workoutName = viewModel.workoutDetailSelected.name,
             onDismissRequest = {
                 shouldShowDeleteDialog.value = false
             },
             onConfirmation = {
-                Log.d(TAG, "WorkoutPlannerDetailScreen - Delete confirmation clicked")
-                //viewModel.delete(viewModel.getSelectedWorkoutPlanner())
-                //close DeleteDialog
+                Log.d(TAG, "WorkoutPlannerDetailScreen - Delete confirmation clicked workoutDetailSelected : ${viewModel.workoutDetailSelected}")
+                viewModel.deleteWorkoutDetail()
+                shouldShowDeleteDialog.value = false
             })
     }
 
     val shouldShowEditScreen = rememberSaveable { mutableStateOf(false) }
     if (shouldShowEditScreen.value) {
         CustomDialog(
-            value = workoutDetailName.value,
+            value = viewModel.workoutDetailSelected.name,
             dialogTitle = "Edit Workout Name",
             setShowDialog = { shouldShowEditScreen.value = it },
             setValue = {
                 Log.d(TAG, "WorkoutPlannerDetailScreen - Edit confirmation clicked: $it")
-                //viewModel.save(viewModel.getSelectedWorkoutPlanner())
-                //close CustomDialog
+                viewModel.workoutDetailSelected = viewModel.workoutDetailSelected.copy(name = it)
+                viewModel.updateWorkoutDetail()
             }
         )
     }
@@ -124,11 +115,19 @@ fun WorkoutPlannerDetailScreen(
             setShowDialog = { shouldShowAddScreen.value = it },
             setValue = {
                 Log.d(TAG, "WorkoutPlannerDetailScreen - Save confirmation clicked: $it")
-                //viewModel.save(viewModel.getSelectedWorkoutPlanner())
-                //close CustomDialog
+                val newWorkoutDetail = WorkoutDetail(
+                    name = it,
+                    foreignKey = viewModel.workoutSelected.id
+                )
+                viewModel.insertWorkoutDetail(newWorkoutDetail)
             }
         )
     }
+
+    LaunchedEffect(key1 = true, block = {
+        Log.d(TAG, "WorkoutPlannerDetailScreen - LaunchedEffect getWorkoutDetailList()")
+        viewModel.getWorkoutDetailList()
+    })
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -139,7 +138,7 @@ fun WorkoutPlannerDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            text = "Workout Planner Name",
+            text = viewModel.workoutSelected.name,
             fontSize = 22.sp,
             maxLines = 2,
             textAlign = TextAlign.Center,
@@ -150,23 +149,23 @@ fun WorkoutPlannerDetailScreen(
         Box(
             modifier = Modifier.fillMaxHeight(0.6f)
         ) {
+            val workoutDetailList by viewModel.workoutDetailList.collectAsStateWithLifecycle()
             LazyColumn {
-                items(exercises) { exercise ->
+                items(workoutDetailList) { workoutDetail ->
                     WorkoutItem(
-                        name = exercise,
+                        workout = workoutDetail.id to workoutDetail.name,
                         onItemClick = {
-                            Log.d(TAG, "WorkoutPlannerDetailScreen - exerciseName clicked id: $it")
+                            Log.d(TAG, "WorkoutPlannerDetailScreen - exerciseName clicked id: ${workoutDetail.id}")
+                            // do nothing
                         },
                         onEditItemClick = {
-                            Log.d(TAG, "WorkoutPlannerDetailScreen - Edit button clicked id: $it")
-                            //viewModel.setSelectedWorkoutDetailName(it)
-                            workoutDetailName.value = exercise.second
+                            Log.d(TAG, "WorkoutPlannerDetailScreen - Edit button clicked id: ${workoutDetail.id}")
+                            viewModel.workoutDetailSelected = workoutDetail
                             shouldShowEditScreen.value = true
                         },
                         onDeletedItemClick = {
-                            Log.d(TAG, "WorkoutPlannerDetailScreen - Delete button clicked id: $it")
-                            //viewModel.setSelectedWorkoutDetailName(it)
-                            workoutDetailName.value = exercise.second
+                            Log.d(TAG, "WorkoutPlannerDetailScreen - Delete button clicked: $workoutDetail")
+                            viewModel.workoutDetailSelected = workoutDetail
                             shouldShowDeleteDialog.value = true
                         }
                     )
@@ -189,7 +188,10 @@ fun WorkoutPlannerDetailScreen(
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
-        NoteItem(note)
+        NoteItem(viewModel.workoutSelected.note) {
+            viewModel.workoutSelected = viewModel.workoutSelected.copy(note = it)
+            viewModel.updateWorkout()
+        }
     }
 }
 
@@ -197,13 +199,14 @@ fun WorkoutPlannerDetailScreen(
 @Composable
 fun WorkoutPlannerDetailScreenPreview() {
     MyWorkoutPlannerTheme {
-        WorkoutPlannerDetailScreen(exercises, note, PaddingValues())
+        val mockWorkoutPlannerViewModel: MyWorkoutPlannerViewModel = viewModel()
+        WorkoutPlannerDetailScreen(mockWorkoutPlannerViewModel)
     }
 }
 
 @Composable
 fun WorkoutItem(
-    name: Pair<Int, String>,
+    workout: Pair<Int, String>,
     isBold: Boolean = false,
     onItemClick: (Int) -> Unit = { },
     onEditItemClick: (Int) -> Unit = { },
@@ -214,14 +217,14 @@ fun WorkoutItem(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .clickable {
-                onItemClick(name.first)
+                onItemClick(workout.first)
             },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             modifier = Modifier.fillMaxWidth(0.7f),
-            text = name.second,
+            text = workout.second,
             fontSize = 18.sp,
             maxLines = 2,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
@@ -231,11 +234,11 @@ fun WorkoutItem(
             horizontalArrangement = Arrangement.End
         ) {
             EditIconButton(
-                onClick = { onEditItemClick(name.first) }
+                onClick = { onEditItemClick(workout.first) }
             )
             Spacer(modifier = Modifier.width(8.dp))
             DeleteIconButton(
-                onClick = { onDeletedItemClick(name.first) }
+                onClick = { onDeletedItemClick(workout.first) }
             )
         }
     }
@@ -252,7 +255,6 @@ fun WorkoutItemPreview() {
 @Composable
 fun NoteItem(
     noteString: String,
-    onEditItemClick: () -> Unit = { },
     onSaveItemClick: (String) -> Unit = { }
 ) {
     val isNoteInEditionMode = rememberSaveable { mutableStateOf(false) }
@@ -294,20 +296,23 @@ fun NoteItem(
                     onClick = {
                         Log.d(TAG, "NoteItem - Save confirmation clicked : ${textFieldValueState.text}")
                         isNoteInEditionMode.value = false
+                        onSaveItemClick(textFieldValueState.text)
                     }
                 )
             } else {
                 EditIconButton(
-                    onClick = { isNoteInEditionMode.value = true }
+                    onClick = {
+                        isNoteInEditionMode.value = true
+                    }
                 )
             }
         }
         if (isNoteInEditionMode.value) {
             TextField(
                 modifier = Modifier
-                    .fillMaxHeight()
+                    .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
                     .focusRequester(focusRequester),
                 value = textFieldValueState,
                 onValueChange = { textFieldValueState = it },

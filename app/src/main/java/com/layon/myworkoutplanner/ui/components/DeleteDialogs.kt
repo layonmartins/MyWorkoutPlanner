@@ -16,15 +16,12 @@ import androidx.compose.ui.text.style.TextAlign
 fun DeleteDialog(
     onDismissRequest: () -> Unit,
     onConfirmation: () -> Unit,
-    workoutName: MutableState<String> = mutableStateOf(""),
-    dialogTitle: String = "",
-    dialogText: String = "",
-    confirmText: String = "",
+    workoutName: String = ""
 ) {
     AlertDialogExample(
         onDismissRequest = { onDismissRequest() },
         onConfirmation = { onConfirmation()},
-        dialogTitle = workoutName.value,
+        dialogTitle = workoutName,
         dialogText = "Do you want delete this workout planner?",
         confirmText = "Delete",
         dismissText = "Cancel",

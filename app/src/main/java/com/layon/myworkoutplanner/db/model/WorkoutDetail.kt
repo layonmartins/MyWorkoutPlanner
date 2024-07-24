@@ -9,9 +9,9 @@ import kotlinx.serialization.Serializable
 @Entity(tableName = "WorkoutDetail")
 data class WorkoutDetail(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
+    val id: Int = 0,
     @SerialName("workout_detail_name")
     val name: String,
     @SerialName("workout_id")
-    val foreignKey: Int
+    val foreignKey: Int = 0
 )

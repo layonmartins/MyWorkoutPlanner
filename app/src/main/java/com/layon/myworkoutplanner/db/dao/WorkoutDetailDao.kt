@@ -21,7 +21,10 @@ interface WorkoutDetailDao {
     @Update
     suspend fun update(workoutDetail: WorkoutDetail)
 
-    @Query("SELECT * FROM WorkoutDetail WHERE id = :workoutId")
+    @Query("SELECT * FROM WorkoutDetail WHERE foreignKey = :workoutId")
     fun getAll(workoutId: Int) : Flow<List<WorkoutDetail>>
+
+    @Query("DELETE FROM WorkoutDetail WHERE foreignKey = :workoutId")
+    suspend fun deleteAll(workoutId: Int)
 
 }

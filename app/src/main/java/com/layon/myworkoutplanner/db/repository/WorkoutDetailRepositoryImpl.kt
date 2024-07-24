@@ -18,7 +18,7 @@ private val dao: WorkoutDetailDao
 
     override suspend fun delete(workoutDetail: WorkoutDetail) {
         withContext(IO) {
-            dao.insert(workoutDetail)
+            dao.delete(workoutDetail)
         }
     }
 
@@ -33,4 +33,11 @@ private val dao: WorkoutDetailDao
             dao.getAll(workoutId)
         }
     }
+
+    override suspend fun deleteAll(workoutId: Int) {
+        return withContext(IO) {
+            dao.deleteAll(workoutId)
+        }
+    }
+
 }
