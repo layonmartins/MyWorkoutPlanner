@@ -2,6 +2,7 @@ package com.layon.myworkoutplanner.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.layon.myworkoutplanner.data.WorkoutUiState
 import com.layon.myworkoutplanner.db.model.Workout
 import com.layon.myworkoutplanner.db.model.WorkoutDetail
 import com.layon.myworkoutplanner.db.repository.WorkoutDetailRepository
@@ -9,15 +10,17 @@ import com.layon.myworkoutplanner.db.repository.WorkoutRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-//TODO implement UiState https://medium.com/@MrAndroid/android-architecture-with-mvvm-and-uistate-f29aa5494465
-// https://developer.android.com/topic/architecture/ui-layer/stateholders
+//TODO bugFix: Some times when add new workoutDetail the list is not updated or updated with wrong values
 // TODO implement unit test
 // TODO Fix the previews
+// TODO remove the hardcoded values exercises and exercisesGroup
 
 @HiltViewModel
 class MyWorkoutPlannerViewModel @Inject constructor(
@@ -25,14 +28,29 @@ class MyWorkoutPlannerViewModel @Inject constructor(
     private val workoutDetailRepository: WorkoutDetailRepository
 ) : ViewModel() {
 
-    private val _workoutList = MutableStateFlow(emptyList<Workout>())
-    val workoutList = _workoutList.asStateFlow()
-    internal var workoutSelected = Workout(name = "", note = "")
+    private val _uiState = MutableStateFlow(WorkoutUiState())
+    val uiState : StateFlow<WorkoutUiState> = _uiState.asStateFlow()
+
+    init {
+        getWorkoutList()
+    }
+
+    fun setWorkoutSelected(workout: Workout) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                workoutSelected = workout
+            )
+        }
+    }
 
     fun getWorkoutList() {
         viewModelScope.launch(IO) {
             workoutRepository.getAll().collectLatest {
-                _workoutList.tryEmit(it)
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        workoutList = it
+                    )
+                }
             }
         }
     }
@@ -45,25 +63,33 @@ class MyWorkoutPlannerViewModel @Inject constructor(
 
     fun updateWorkout() {
         viewModelScope.launch(IO) {
-            workoutRepository.update(workoutSelected)
+            workoutRepository.update(_uiState.value.workoutSelected)
         }
     }
 
     fun deleteWorkout() {
         viewModelScope.launch(IO) {
-            workoutRepository.delete(workoutSelected)
-            workoutDetailRepository.deleteAll(workoutSelected.id)
+            workoutRepository.delete(_uiState.value.workoutSelected)
+            workoutDetailRepository.deleteAll(_uiState.value.workoutSelected.id)
         }
     }
 
-    private val _workoutDetailList = MutableStateFlow(emptyList<WorkoutDetail>())
-    val workoutDetailList = _workoutDetailList.asStateFlow()
-    internal var workoutDetailSelected = WorkoutDetail(name = "")
+    fun setWorkoutDetailSelected(workoutDetail: WorkoutDetail) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                workoutDetailSelected = workoutDetail
+            )
+        }
+    }
 
     fun getWorkoutDetailList() {
         viewModelScope.launch(IO) {
-            workoutDetailRepository.getAll(workoutSelected.id).collectLatest {
-                _workoutDetailList.tryEmit(it)
+            workoutDetailRepository.getAll(_uiState.value.workoutSelected.id).collectLatest {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        workoutDetailList = it
+                    )
+                }
             }
         }
     }
@@ -76,13 +102,13 @@ class MyWorkoutPlannerViewModel @Inject constructor(
 
     fun updateWorkoutDetail() {
         viewModelScope.launch(IO) {
-            workoutDetailRepository.update(workoutDetailSelected)
+            workoutDetailRepository.update(_uiState.value.workoutDetailSelected)
         }
     }
 
     fun deleteWorkoutDetail() {
         viewModelScope.launch(IO) {
-            workoutDetailRepository.delete(workoutDetailSelected)
+            workoutDetailRepository.delete(_uiState.value.workoutDetailSelected)
         }
     }
 

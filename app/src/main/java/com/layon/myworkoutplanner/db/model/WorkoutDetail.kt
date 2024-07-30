@@ -11,7 +11,7 @@ data class WorkoutDetail(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     @SerialName("workout_detail_name")
-    val name: String,
+    val name: String = "",
     @SerialName("workout_id")
     val foreignKey: Int = 0
 )

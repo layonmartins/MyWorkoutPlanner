@@ -11,7 +11,7 @@ data class Workout(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     @SerialName("workout_name")
-    val name: String,
+    val name: String = "",
     @SerialName("workout_note")
-    val note: String
+    val note: String = ""
 )

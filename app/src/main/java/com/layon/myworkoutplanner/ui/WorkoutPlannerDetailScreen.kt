@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +42,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.layon.myworkoutplanner.db.model.WorkoutDetail
 import com.layon.myworkoutplanner.ui.components.CustomDialog
@@ -79,15 +79,17 @@ val note =
 fun WorkoutPlannerDetailScreen(
     viewModel: MyWorkoutPlannerViewModel
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     val shouldShowDeleteDialog = rememberSaveable { mutableStateOf(false) }
     if (shouldShowDeleteDialog.value) {
         DeleteDialog(
-            workoutName = viewModel.workoutDetailSelected.name,
+            workoutName = uiState.workoutDetailSelected.name,
             onDismissRequest = {
                 shouldShowDeleteDialog.value = false
             },
             onConfirmation = {
-                Log.d(TAG, "WorkoutPlannerDetailScreen - Delete confirmation clicked workoutDetailSelected : ${viewModel.workoutDetailSelected}")
+                Log.d(TAG, "WorkoutPlannerDetailScreen - Delete confirmation clicked workoutDetailSelected : ${uiState.workoutDetailSelected}")
                 viewModel.deleteWorkoutDetail()
                 shouldShowDeleteDialog.value = false
             })
@@ -96,12 +98,12 @@ fun WorkoutPlannerDetailScreen(
     val shouldShowEditScreen = rememberSaveable { mutableStateOf(false) }
     if (shouldShowEditScreen.value) {
         CustomDialog(
-            value = viewModel.workoutDetailSelected.name,
+            value = uiState.workoutDetailSelected.name,
             dialogTitle = "Edit Workout Name",
             setShowDialog = { shouldShowEditScreen.value = it },
             setValue = {
                 Log.d(TAG, "WorkoutPlannerDetailScreen - Edit confirmation clicked: $it")
-                viewModel.workoutDetailSelected = viewModel.workoutDetailSelected.copy(name = it)
+                viewModel.setWorkoutDetailSelected(uiState.workoutDetailSelected.copy(name = it))
                 viewModel.updateWorkoutDetail()
             }
         )
@@ -117,17 +119,12 @@ fun WorkoutPlannerDetailScreen(
                 Log.d(TAG, "WorkoutPlannerDetailScreen - Save confirmation clicked: $it")
                 val newWorkoutDetail = WorkoutDetail(
                     name = it,
-                    foreignKey = viewModel.workoutSelected.id
+                    foreignKey = uiState.workoutSelected.id
                 )
                 viewModel.insertWorkoutDetail(newWorkoutDetail)
             }
         )
     }
-
-    LaunchedEffect(key1 = true, block = {
-        Log.d(TAG, "WorkoutPlannerDetailScreen - LaunchedEffect getWorkoutDetailList()")
-        viewModel.getWorkoutDetailList()
-    })
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -138,7 +135,7 @@ fun WorkoutPlannerDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            text = viewModel.workoutSelected.name,
+            text = uiState.workoutSelected.name,
             fontSize = 22.sp,
             maxLines = 2,
             textAlign = TextAlign.Center,
@@ -149,9 +146,8 @@ fun WorkoutPlannerDetailScreen(
         Box(
             modifier = Modifier.fillMaxHeight(0.6f)
         ) {
-            val workoutDetailList by viewModel.workoutDetailList.collectAsStateWithLifecycle()
             LazyColumn {
-                items(workoutDetailList) { workoutDetail ->
+                items(uiState.workoutDetailList) { workoutDetail ->
                     WorkoutItem(
                         workout = workoutDetail.id to workoutDetail.name,
                         onItemClick = {
@@ -160,12 +156,12 @@ fun WorkoutPlannerDetailScreen(
                         },
                         onEditItemClick = {
                             Log.d(TAG, "WorkoutPlannerDetailScreen - Edit button clicked id: ${workoutDetail.id}")
-                            viewModel.workoutDetailSelected = workoutDetail
+                            viewModel.setWorkoutDetailSelected(workoutDetail)
                             shouldShowEditScreen.value = true
                         },
                         onDeletedItemClick = {
                             Log.d(TAG, "WorkoutPlannerDetailScreen - Delete button clicked: $workoutDetail")
-                            viewModel.workoutDetailSelected = workoutDetail
+                            viewModel.setWorkoutDetailSelected(workoutDetail)
                             shouldShowDeleteDialog.value = true
                         }
                     )
@@ -188,8 +184,8 @@ fun WorkoutPlannerDetailScreen(
         Spacer(modifier = Modifier.height(8.dp))
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
-        NoteItem(viewModel.workoutSelected.note) {
-            viewModel.workoutSelected = viewModel.workoutSelected.copy(note = it)
+        NoteItem(uiState.workoutSelected.note) {
+            viewModel.setWorkoutSelected(uiState.workoutSelected.copy(note = it))
             viewModel.updateWorkout()
         }
     }

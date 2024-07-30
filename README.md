@@ -3,6 +3,7 @@
 
 * Compose
 * Compose Navigations
+* UiState
 * Database with Room API
 * Kotlin Flow API
 * Hilt
@@ -22,3 +23,4 @@ Note: A one-to-many releationship was implemented in the logic of application (V
  * https://saurabhjadhavblogs.com/compose-mvvm-roomdb-with-flow-and-di
  * https://developer.android.com/codelabs/basic-android-kotlin-compose-navigation#0
  * https://proandroiddev.com/jetpack-compose-screen-navigation-with-type-safety-337ec177026e
+ * https://developer.android.com/topic/architecture/ui-layer/stateholders
